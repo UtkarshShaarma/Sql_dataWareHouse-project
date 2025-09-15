@@ -23,10 +23,10 @@ drop database IF exists bronze;
 
 create database bronze;
 
-drop database IF exists bronze;
+drop database IF exists silver;
 
 create database silver;
 
-drop database IF exists bronze;
+drop database IF exists gold;
 
 create database gold;
