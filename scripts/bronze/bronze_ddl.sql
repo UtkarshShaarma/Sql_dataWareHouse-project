@@ -75,6 +75,7 @@ MAINTENANCE varchar(50)
 
 SET GLOBAL local_infile = 1;
 
+truncate bronze.crm_cust_info;
 LOAD DATA LOCAL INFILE 'D:\\data_ware\\datasets\\source_crm\\crm_cust_info.csv'
 INTO TABLE bronze.crm_cust_info
 FIELDS TERMINATED BY ','
@@ -84,15 +85,23 @@ IGNORE 1 ROWS
 (cst_id, cst_key, cst_firstname, cst_lastname, cst_marital_status, cst_gndr, @cst_create_date)
 SET cst_create_date = STR_TO_DATE(@cst_create_date, '%Y-%m-%d');
 
-load data local infile 'D:\\data_ware\\datasets\\source_crm\\crm_prd_info.csv'
-into table bronze.crm_prd_info
-Fields terminated by ','
+
+truncate bronze.crm_prd_info;
+LOAD DATA LOCAL INFILE 'D:\\data_ware\\datasets\\source_crm\\crm_prd_info.csv'
+INTO TABLE bronze.crm_prd_info
+FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 ROWS
-(prd_id,prd_key,prd_nm,prd_cost,prd_line,prd_start_dt,prd_end_dt);
+(prd_id, prd_key, prd_nm, prd_cost, prd_line,
+ @raw_prd_start_dt, @raw_prd_end_dt)
+SET 
+  prd_start_dt = STR_TO_DATE(TRIM(REPLACE(@raw_prd_start_dt, '\r', '')), '%d-%m-%Y'),
+  prd_end_dt   = STR_TO_DATE(TRIM(REPLACE(@raw_prd_end_dt, '\r', '')), '%d-%m-%Y');
 
 
+
+truncate bronze.crm_sales_details;
 load data local infile 'D:\\data_ware\\datasets\\source_crm\\crm_sales_details.csv'
 into table bronze.crm_sales_details
 fields terminated by ',' 
@@ -103,16 +112,21 @@ ignore 1 rows
 
 
 
+select count(*) from bronze.crm_sales_details;
 
-
+truncate bronze.erp_cust_az12;
  load data local infile 'D:\\data_ware\\datasets\\source_erp\\erp_CUST_AZ12.csv'
  into table bronze.erp_cust_az12
  fields terminated by ','
  optionally enclosed by '"'
- lines terminated by '\n'
+ lines terminated by '\r\n'
  ignore 1 rows
- (CID,BDATE,GEN);
+ (CID,@raw_BDATE,GEN)
+ set
+ BDATE=STR_TO_DATE(TRIM(REPLACE(@raw_BDATE, '\r', '')), '%d-%m-%Y');
  
+ 
+  truncate bronze.erp_loc_a101;
  load data local infile 'D:\\data_ware\\datasets\\source_erp\\erp_LOC_A101.csv'
  into table bronze.erp_loc_a101
  fields terminated by ','
@@ -121,20 +135,16 @@ ignore 1 rows
  ignore 1 rows 
  (CID,CNTRY);
 
+use bronze;
+show tables;
 
+truncate bronze.erp_px_cat_g1v2;
 load data local infile 'D:\\data_ware\\datasets\\source_erp\\erp_PX_CAT_G1V2.csv'
 into table bronze.erp_px_cat_g1v2
-fields terminated by '"'
-optionally enclosed by '\n'
+fields terminated by ','
+optionally enclosed by '"'
+
+ lines terminated by '\n'
 ignore 1 rows
 (ID,CAT,SUBCAT,MAINTENANCE);
 
-
-
-
-
-
-
-
-)
-select * from  factorial;
